@@ -68,11 +68,11 @@ void toggleOnOff()
 
 
 //scales the brightness with the briMultiplier factor
-byte scaledBri(byte in)
+uint16_t scaledBri(uint16_t in)
 {
-  uint16_t val = ((uint16_t)in*briMultiplier)/100;
-  if (val > 255) val = 255;
-  return (byte)val;
+  uint32_t val = ((uint32_t)in*briMultiplier)/100;
+  if (val > 1023) val = 1023;
+  return (uint16_t)val;
 }
 
 
@@ -87,8 +87,8 @@ void applyBri() {
 
 //applies global brightness and sets it as the "current" brightness (no transition)
 void applyFinalBri() {
-  briOld = bri;
-  briT = bri;
+  briOld = ((uint16_t)bri*4);
+  briT = ((uint16_t)bri*4);
   applyBri();
 }
 
@@ -100,7 +100,7 @@ void stateUpdated(byte callMode) {
   //                     6: fx changed 7: hue 8: preset cycle 9: blynk 10: alexa 11: ws send only 12: button preset
   setValuesFromFirstSelectedSeg();
 
-  if (bri != briOld || stateChanged) {
+  if ((bri*4) != briOld || stateChanged) {
     if (stateChanged) currentPreset = 0; //something changed, so we are no longer in the preset
 
     if (callMode != CALL_MODE_NOTIFICATION && callMode != CALL_MODE_NO_NOTIFY) notify(callMode);
@@ -197,7 +197,7 @@ void handleTransitions()
     }
     if (tper - tperLast < 0.004) return;
     tperLast = tper;
-    briT = briOld + ((bri - briOld) * tper);
+    briT = (briOld + (((bri*4) - briOld)) * tper);
 
     applyBri();
   }

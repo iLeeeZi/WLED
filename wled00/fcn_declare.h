@@ -73,6 +73,7 @@ void setRandomColor(byte* rgb);
 uint8_t gamma8_cal(uint8_t b, float gamma);
 void calcGammaTable(float gamma);
 uint8_t gamma8(uint8_t b);
+uint16_t gamma10(uint16_t b);
 uint32_t gamma32(uint32_t);
 
 //dmx.cpp
@@ -157,7 +158,7 @@ void stateUpdated(byte callMode);
 void updateInterfaces(uint8_t callMode);
 void handleTransitions();
 void handleNightlight();
-byte scaledBri(byte in);
+uint16_t scaledBri(uint16_t in);
 
 //lx_parser.cpp
 bool parseLx(int lxValue, byte* rgbw);

@@ -214,7 +214,7 @@ void deserializeSegment(JsonObject elem, byte it, byte presetId)
     // set brightness immediately and disable transition
     transitionDelayTemp = 0;
     jsonTransitionOnce = true;
-    strip.setBrightness(scaledBri(bri), true);
+    strip.setBrightness(scaledBri(((uint16_t)bri*4)), true);
 
     // freeze and init to black
     if (!seg.freeze) {

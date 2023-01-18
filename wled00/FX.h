@@ -35,7 +35,7 @@
 #define USE_GET_MILLISECOND_TIMER
 #include "FastLED.h"
 
-#define DEFAULT_BRIGHTNESS (uint8_t)127
+#define DEFAULT_BRIGHTNESS (uint16_t)511
 #define DEFAULT_MODE       (uint8_t)0
 #define DEFAULT_SPEED      (uint8_t)128
 #define DEFAULT_INTENSITY  (uint8_t)128
@@ -714,7 +714,7 @@ class WS2812FX {  // 96 bytes
       setColor(uint8_t slot, uint8_t r, uint8_t g, uint8_t b, uint8_t w = 0),
       setColor(uint8_t slot, uint32_t c),
       setCCT(uint16_t k),
-      setBrightness(uint8_t b, bool direct = false),
+      setBrightness(uint16_t b, bool direct = false),
       setRange(uint16_t i, uint16_t i2, uint32_t col),
       setTransitionMode(bool t),
       purgeSegments(bool force = false),
@@ -763,7 +763,7 @@ class WS2812FX {  // 96 bytes
       getLastActiveSegmentId(void),
       setPixelSegment(uint8_t n);
 
-    inline uint8_t getBrightness(void) { return _brightness; }
+    inline uint8_t getBrightness(void) { return (_brightness/4); }
     inline uint8_t getMaxSegments(void) { return MAX_NUM_SEGMENTS; }  // returns maximum number of supported segments (fixed value)
     inline uint8_t getSegmentsNum(void) { return _segments.size(); }  // returns currently present segments
     inline uint8_t getCurrSegmentId(void) { return _segment_index; }
@@ -864,7 +864,7 @@ class WS2812FX {  // 96 bytes
 
   private:
     uint16_t _length;
-    uint8_t  _brightness;
+    uint16_t  _brightness;
     uint16_t _transitionDur;
 
     uint8_t  _targetFps;

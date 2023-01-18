@@ -155,7 +155,7 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
 
       if (bri != e131_data[dataOffset+0]) {
         bri = e131_data[dataOffset+0];
-        strip.setBrightness(bri, true);
+        strip.setBrightness(((uint16_t)bri*4), true);
       }
 
       for (uint16_t i = 0; i < totalLen; i++)
@@ -167,7 +167,7 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
       applyPreset(e131_data[dataOffset+1], CALL_MODE_NOTIFICATION);
       if (bri != e131_data[dataOffset]) {
         bri = e131_data[dataOffset];
-        strip.setBrightness(bri, true);
+        strip.setBrightness(((uint16_t)bri*4), true);
       }
       return;
       break;
@@ -225,7 +225,7 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
           } else if ( id == strip.getSegmentsNum()-1 ) {
             if (bri != e131_data[dataOffset]) {
               bri = e131_data[dataOffset];
-              strip.setBrightness(bri, true);
+              strip.setBrightness(((uint16_t)bri*4), true);
             }
           }
         }
@@ -278,7 +278,7 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
         if (DMXMode == DMX_MODE_MULTIPLE_DRGB && previousUniverses == 0) {
           if (bri != stripBrightness) {
             bri = stripBrightness;
-            strip.setBrightness(bri, true);
+            strip.setBrightness(((uint16_t)bri*4), true);
           }
         }
 

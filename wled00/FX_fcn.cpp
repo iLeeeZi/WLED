@@ -1172,16 +1172,17 @@ void WS2812FX::estimateCurrentAndLimitBri() {
     powerSum += busPowerSum;
   }
 
+  uint8_t _brightnessTemp = (_brightness/4);
   uint32_t powerSum0 = powerSum;
-  powerSum *= _brightness;
+  powerSum *= _brightnessTemp;
 
   if (powerSum > powerBudget) //scale brightness down to stay in current limit
   {
     float scale = (float)powerBudget / (float)powerSum;
     uint16_t scaleI = scale * 255;
     uint8_t scaleB = (scaleI > 255) ? 255 : scaleI;
-    uint8_t newBri = scale8(_brightness, scaleB);
-    busses.setBrightness(newBri); //to keep brightness uniform, sets virtual busses too
+    uint8_t newBri = scale8(_brightnessTemp, scaleB);
+    busses.setBrightness(((uint16_t)newBri*4)); //to keep brightness uniform, sets virtual busses too
     currentMilliamps = (powerSum0 * newBri) / puPerMilliamp;
   } else {
     currentMilliamps = powerSum / puPerMilliamp;
@@ -1264,8 +1265,8 @@ void WS2812FX::setCCT(uint16_t k) {
   }
 }
 
-void WS2812FX::setBrightness(uint8_t b, bool direct) {
-  if (gammaCorrectBri) b = gamma8(b);
+void WS2812FX::setBrightness(uint16_t b, bool direct) {
+  if (gammaCorrectBri) b = gamma10(b);
   if (_brightness == b) return;
   _brightness = b;
   if (_brightness == 0) { //unfreeze all segments on power off

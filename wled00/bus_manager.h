@@ -142,6 +142,7 @@ class Bus {
   public:
     Bus(uint8_t type, uint16_t start, uint8_t aw)
     : _bri(255)
+    , _bri10bit(1023)
     , _len(1)
     , _valid(false)
     , _needsRefresh(false)
@@ -158,7 +159,7 @@ class Bus {
     virtual void     setStatusPixel(uint32_t c) {}
     virtual void     setPixelColor(uint16_t pix, uint32_t c) = 0;
     virtual uint32_t getPixelColor(uint16_t pix) { return 0; }
-    virtual void     setBrightness(uint8_t b) { _bri = b; };
+    virtual void     setBrightness(uint16_t b) { _bri = (b/4); _bri10bit = b; };
     virtual void     cleanup() = 0;
     virtual uint8_t  getPins(uint8_t* pinArray) { return 0; }
     virtual uint16_t getLength() { return _len; }
@@ -209,6 +210,7 @@ class Bus {
   protected:
     uint8_t  _type;
     uint8_t  _bri;
+    uint16_t _bri10bit;
     uint16_t _start;
     uint16_t _len;
     bool     _valid;
@@ -267,15 +269,16 @@ class BusDigital : public Bus {
     return PolyBus::canShow(_busPtr, _iType);
   }
 
-  void setBrightness(uint8_t b) {
+  void setBrightness(uint16_t b) {
     //Fix for turning off onboard LED breaking bus
     #ifdef LED_BUILTIN
-    if (_bri == 0 && b > 0) {
+    if (_bri10bit == 0 && b > 0) {
       if (_pins[0] == LED_BUILTIN || _pins[1] == LED_BUILTIN) PolyBus::begin(_busPtr, _iType, _pins);
     }
     #endif
+    uint8_t bTemp = (b/4);
     Bus::setBrightness(b);
-    PolyBus::setBrightness(_busPtr, _iType, b);
+    PolyBus::setBrightness(_busPtr, _iType, bTemp);
   }
 
 	//If LEDs are skipped, it is possible to use the first as a status LED.
@@ -361,7 +364,7 @@ class BusPwm : public Bus {
     uint8_t numPins = NUM_PWM_PINS(bc.type);
 
     #ifdef ESP8266
-    analogWriteRange(255);  //same range as one RGB channel
+    analogWriteRange(1023);  //10bit
     analogWriteFreq(WLED_PWM_FREQ);
     #else
     _ledcStart = pinManager.allocateLedc(numPins);
@@ -450,8 +453,8 @@ class BusPwm : public Bus {
     if (!_valid) return;
     uint8_t numPins = NUM_PWM_PINS(_type);
     for (uint8_t i = 0; i < numPins; i++) {
-      uint8_t scaled = (_data[i] * _bri) / 255;
-      if (reversed) scaled = 255 - scaled;
+      uint16_t scaled = (((uint32_t)_data[i]*4) * _bri10bit) / 1023;
+      if (reversed) scaled = 1023 - scaled;
       #ifdef ESP8266
       analogWrite(_pins[i], scaled);
       #else
@@ -690,7 +693,7 @@ class BusManager {
   void     removeAll();  //do not call this method from system context (network callback)
   void     setStatusPixel(uint32_t c);
   void     setPixelColor(uint16_t pix, uint32_t c, int16_t cct=-1);
-  void     setBrightness(uint8_t b);
+  void     setBrightness(uint16_t b);
   void     setSegmentCCT(int16_t cct, bool allowWBCorrection = false);
   uint32_t getPixelColor(uint16_t pix);
   bool     canAllShow();
@@ -744,7 +747,7 @@ class BusManager {
     }
   }
 
-  void setBrightness(uint8_t b) {
+  void setBrightness(uint16_t b) {
     for (uint8_t i = 0; i < numBusses; i++) {
       busses[i]->setBrightness(b);
     }
