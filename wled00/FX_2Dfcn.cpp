@@ -163,13 +163,13 @@ void IRAM_ATTR Segment::setPixelColorXY(int x, int y, uint32_t col)
 
   if (leds) leds[XY(x,y)] = col;
 
-  uint8_t _bri_t = currentBri(on ? opacity : 0);
+  uint16_t _bri_t = currentBri(on ? ((uint16_t)opacity*4) : 0);
   if (!_bri_t && !transitional) return;
-  if (_bri_t < 255) {
-    byte r = scale8(R(col), _bri_t);
-    byte g = scale8(G(col), _bri_t);
-    byte b = scale8(B(col), _bri_t);
-    byte w = scale8(W(col), _bri_t);
+  if (_bri_t < 1023) {
+    byte r = scale8(R(col), (_bri_t/4));
+    byte g = scale8(G(col), (_bri_t/4));
+    byte b = scale8(B(col), (_bri_t/4));
+    byte w = scale8(W(col), (_bri_t/4));
     col = RGBW32(r, g, b, w);
   }
 

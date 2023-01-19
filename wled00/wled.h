@@ -519,7 +519,8 @@ WLED_GLOBAL byte colNlT[] _INIT_N(({ 0, 0, 0, 0 }));        // current nightligh
 WLED_GLOBAL unsigned long lastOnTime _INIT(0);
 WLED_GLOBAL bool offMode             _INIT(!turnOnAtBoot);
 WLED_GLOBAL byte bri             _INIT(briS);          // global brightness (set)
-WLED_GLOBAL uint16_t briOld          _INIT(0);             // global brightnes while in transition loop (previous iteration)
+WLED_GLOBAL uint16_t briOldTemp      _INIT(0);             // global brightness before transition
+WLED_GLOBAL uint16_t briOld          _INIT(0);             // global brightness while in transition loop (previous iteration)
 WLED_GLOBAL uint16_t briT            _INIT(0);             // global brightness during transition
 WLED_GLOBAL byte briLast             _INIT(128);           // brightness before turned off. Used for toggle function
 WLED_GLOBAL byte whiteLast           _INIT(128);           // white channel before turned off. Used for toggle function

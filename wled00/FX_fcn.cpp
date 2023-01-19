@@ -306,8 +306,8 @@ void Segment::startTransition(uint16_t dur) {
   if (transitional || _t) return; // already in transition no need to store anything
 
   // starting a transition has to occur before change so we get current values 1st
-  uint8_t _briT = currentBri(on ? opacity : 0);
-  uint8_t _cctT = currentBri(cct, true);
+  uint16_t _briT = currentBri(on ? ((uint16_t)opacity*4) : 0);
+  uint16_t _cctT = currentBri(((uint16_t)cct*4), true);
   CRGBPalette16 _palT = CRGBPalette16(DEFAULT_COLOR); loadPalette(_palT, palette);
   uint8_t _modeP = mode;
   uint32_t _colorT[NUM_COLORS];
@@ -331,11 +331,11 @@ uint16_t Segment::progress() {
   return (timeNow - _t->_start) * 0xFFFFU / _t->_dur;
 }
 
-uint8_t Segment::currentBri(uint8_t briNew, bool useCct) {
+uint16_t Segment::currentBri(uint16_t briNew, bool useCct) {
   if (transitional && _t) {
     uint32_t prog = progress() + 1;
-    if (useCct) return ((briNew * prog) + _t->_cctT * (0x10000 - prog)) >> 16;
-    else        return ((briNew * prog) + _t->_briT * (0x10000 - prog)) >> 16;
+    if (useCct) return (((uint32_t)briNew * prog) + _t->_cctT * (0x10000 - prog)) >> 16;
+    else        return (((uint32_t)briNew * prog) + _t->_briT * (0x10000 - prog)) >> 16;
   } else {
     return briNew;
   }
@@ -612,13 +612,13 @@ void IRAM_ATTR Segment::setPixelColor(int i, uint32_t col)
   if (leds) leds[i] = col;
 
   uint16_t len = length();
-  uint8_t _bri_t = currentBri(on ? opacity : 0);
+  uint16_t _bri_t = currentBri(on ? ((uint16_t)opacity*4) : 0);
   if (!_bri_t && !transitional) return;
-  if (_bri_t < 255) {
-    byte r = scale8(R(col), _bri_t);
-    byte g = scale8(G(col), _bri_t);
-    byte b = scale8(B(col), _bri_t);
-    byte w = scale8(W(col), _bri_t);
+  if (_bri_t < 1023) {
+    byte r = scale8(R(col), (_bri_t/4));
+    byte g = scale8(G(col), (_bri_t/4));
+    byte b = scale8(B(col), (_bri_t/4));
+    byte w = scale8(W(col), (_bri_t/4));
     col = RGBW32(r, g, b, w);
   }
 
@@ -1066,7 +1066,7 @@ void WS2812FX::service() {
         _colors_t[2] = seg.currentColor(2, seg.colors[2]);
         seg.currentPalette(_currentPalette, seg.palette);
 
-        if (!cctFromRgb || correctWB) busses.setSegmentCCT(seg.currentBri(seg.cct, true), correctWB);
+        if (!cctFromRgb || correctWB) busses.setSegmentCCT(((seg.currentBri(((uint32_t)seg.cct*4), true))/4), correctWB);
         for (uint8_t c = 0; c < NUM_COLORS; c++) _colors_t[c] = gamma32(_colors_t[c]);
 
         // effect blending (execute previous effect)

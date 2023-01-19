@@ -89,6 +89,7 @@ void applyBri() {
 void applyFinalBri() {
   briOld = ((uint16_t)bri*4);
   briT = ((uint16_t)bri*4);
+  briOldTemp = briOld;
   applyBri();
 }
 
@@ -100,7 +101,7 @@ void stateUpdated(byte callMode) {
   //                     6: fx changed 7: hue 8: preset cycle 9: blynk 10: alexa 11: ws send only 12: button preset
   setValuesFromFirstSelectedSeg();
 
-  if ((bri*4) != briOld || stateChanged) {
+  if (((uint16_t)bri*4) != briOld || stateChanged) {
     if (stateChanged) currentPreset = 0; //something changed, so we are no longer in the preset
 
     if (callMode != CALL_MODE_NOTIFICATION && callMode != CALL_MODE_NO_NOTIFY) notify(callMode);
@@ -131,7 +132,9 @@ void stateUpdated(byte callMode) {
 
   if (fadeTransition) {
     //set correct delay if not using notification delay
-    if (callMode != CALL_MODE_NOTIFICATION && !jsonTransitionOnce) transitionDelayTemp = transitionDelay; // load actual transition duration
+    uint16_t diffTemp = abs(((uint16_t)bri*4) - briOldTemp);
+    if (callMode != CALL_MODE_NOTIFICATION && !jsonTransitionOnce) transitionDelayTemp = ((uint32_t)diffTemp*transitionDelay)/1023; // load actual transition duration
+    else transitionDelayTemp = ((uint32_t)diffTemp*transitionDelayTemp)/1023;
     jsonTransitionOnce = false;
     strip.setTransition(transitionDelayTemp);
     if (transitionDelayTemp == 0) {
@@ -197,7 +200,7 @@ void handleTransitions()
     }
     if (tper - tperLast < 0.004) return;
     tperLast = tper;
-    briT = (briOld + (((bri*4) - briOld)) * tper);
+    briT = (briOld + ((((uint16_t)bri*4) - briOld)) * tper);
 
     applyBri();
   }
