@@ -89,7 +89,6 @@ void applyBri() {
 void applyFinalBri() {
   briOld = ((uint16_t)bri*4);
   briT = ((uint16_t)bri*4);
-  briOldTemp = briOld;
   applyBri();
 }
 
@@ -132,22 +131,20 @@ void stateUpdated(byte callMode) {
 
   if (fadeTransition) {
     //set correct delay if not using notification delay
-    uint16_t diffTemp = abs(((uint16_t)bri*4) - briOldTemp);
-    if (callMode != CALL_MODE_NOTIFICATION && !jsonTransitionOnce) transitionDelayTemp = ((uint32_t)diffTemp*transitionDelay)/1023; // load actual transition duration
-    else transitionDelayTemp = ((uint32_t)diffTemp*transitionDelayTemp)/1023;
+    if (callMode != CALL_MODE_NOTIFICATION && !jsonTransitionOnce) transitionDelayTemp = transitionDelay; // load actual transition duration
     jsonTransitionOnce = false;
     strip.setTransition(transitionDelayTemp);
+    diffG = abs(bri - (briOld/4));
     if (transitionDelayTemp == 0) {
       applyFinalBri();
       strip.trigger();
       return;
     }
-
     if (transitionActive) {
       briOld = briT;
       tperLast = 0;
     }
-    strip.setTransitionMode(true); // force all segments to transition mode
+    strip.setTransitionMode(true, diffG); // force all segments to transition mode
     transitionActive = true;
     transitionStartTime = millis();
   } else {
@@ -189,10 +186,11 @@ void handleTransitions()
 
   if (transitionActive && transitionDelayTemp > 0)
   {
-    float tper = (millis() - transitionStartTime)/(float)transitionDelayTemp;
+    uint16_t dur = ((uint16_t)diffG*transitionDelayTemp)/255;
+    float tper = (millis() - transitionStartTime)/(float)dur;
     if (tper >= 1.0)
     {
-      strip.setTransitionMode(false);
+      strip.setTransitionMode(false, 255);
       transitionActive = false;
       tperLast = 0;
       applyFinalBri();

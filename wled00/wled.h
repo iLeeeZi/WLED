@@ -505,6 +505,7 @@ WLED_GLOBAL uint16_t      transitionDelayTemp    _INIT(transitionDelay); // actu
 WLED_GLOBAL unsigned long transitionStartTime;
 WLED_GLOBAL float         tperLast               _INIT(0.0f);            // crossfade transition progress, 0.0f - 1.0f
 WLED_GLOBAL bool          jsonTransitionOnce     _INIT(false);           // flag to override transitionDelay (playlist, JSON API: "live" & "seg":{"i"} & "tt")
+WLED_GLOBAL uint8_t       diffG                  _INIT(255);             // difference between transition points
 
 // nightlight
 WLED_GLOBAL bool nightlightActive _INIT(false);
@@ -518,8 +519,7 @@ WLED_GLOBAL byte colNlT[] _INIT_N(({ 0, 0, 0, 0 }));        // current nightligh
 // brightness
 WLED_GLOBAL unsigned long lastOnTime _INIT(0);
 WLED_GLOBAL bool offMode             _INIT(!turnOnAtBoot);
-WLED_GLOBAL byte bri             _INIT(briS);          // global brightness (set)
-WLED_GLOBAL uint16_t briOldTemp      _INIT(0);             // global brightness before transition
+WLED_GLOBAL byte bri                 _INIT(briS);          // global brightness (set)
 WLED_GLOBAL uint16_t briOld          _INIT(0);             // global brightness while in transition loop (previous iteration)
 WLED_GLOBAL uint16_t briT            _INIT(0);             // global brightness during transition
 WLED_GLOBAL byte briLast             _INIT(128);           // brightness before turned off. Used for toggle function

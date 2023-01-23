@@ -530,7 +530,7 @@ typedef struct Segment {
     void setUpLeds(void);   // set up leds[] array for loseless getPixelColor()
 
     // transition functions
-    void     startTransition(uint16_t dur); // transition has to start before actual segment values change
+    void     startTransition(uint16_t dur, uint8_t diff); // transition has to start before actual segment values change
     void     handleTransition(void);
     uint16_t progress(void); //transition progression between 0-65535
     uint16_t  currentBri(uint16_t briNew, bool useCct = false);
@@ -717,7 +717,7 @@ class WS2812FX {  // 96 bytes
       setCCT(uint16_t k),
       setBrightness(uint16_t b, bool direct = false),
       setRange(uint16_t i, uint16_t i2, uint32_t col),
-      setTransitionMode(bool t),
+      setTransitionMode(bool t, uint8_t diff),
       purgeSegments(bool force = false),
       setSegment(uint8_t n, uint16_t start, uint16_t stop, uint8_t grouping = 1, uint8_t spacing = 0, uint16_t offset = UINT16_MAX, uint16_t startY=0, uint16_t stopY=1),
       setMainSegmentId(uint8_t n),

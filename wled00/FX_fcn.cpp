@@ -302,7 +302,7 @@ CRGBPalette16 &Segment::loadPalette(CRGBPalette16 &targetPalette, uint8_t pal) {
   return targetPalette;
 }
 
-void Segment::startTransition(uint16_t dur) {
+void Segment::startTransition(uint16_t dur, uint8_t diff) {
   if (transitional || _t) return; // already in transition no need to store anything
 
   // starting a transition has to occur before change so we get current values 1st
@@ -312,7 +312,7 @@ void Segment::startTransition(uint16_t dur) {
   uint8_t _modeP = mode;
   uint32_t _colorT[NUM_COLORS];
   for (size_t i=0; i<NUM_COLORS; i++) _colorT[i] = currentColor(i, colors[i]);
-
+  dur = ((uint16_t)diff*dur)/255;
   if (!_t) _t = new Transition(dur); // no previous transition running
   if (!_t) return; // failed to allocate data
   _t->_briT  = _briT;
@@ -415,7 +415,8 @@ void Segment::set(uint16_t i1, uint16_t i2, uint8_t grp, uint8_t spc, uint16_t o
 
 bool Segment::setColor(uint8_t slot, uint32_t c) { //returns true if changed
   if (slot >= NUM_COLORS || c == colors[slot]) return false;
-  if (fadeTransition) startTransition(strip.getTransition()); // start transition prior to change
+  uint8_t diff = abs(W(c) - W(currentColor(slot, colors[slot])));
+  if (fadeTransition) startTransition(strip.getTransition(), diff); // start transition prior to change
   colors[slot] = c;
   stateChanged = true; // send UDP/WS broadcast
   return true;
@@ -428,21 +429,23 @@ void Segment::setCCT(uint16_t k) {
     k = (k - 1900) >> 5;
   }
   if (cct == k) return;
-  if (fadeTransition) startTransition(strip.getTransition()); // start transition prior to change
+  uint8_t diff = abs(k - currentBri(cct, true));
+  if (fadeTransition) startTransition(strip.getTransition(), diff); // start transition prior to change
   cct = k;
   stateChanged = true; // send UDP/WS broadcast
 }
 
 void Segment::setOpacity(uint8_t o) {
   if (opacity == o) return;
-  if (fadeTransition) startTransition(strip.getTransition()); // start transition prior to change
+  uint8_t diff = abs(o - currentBri(on ? opacity : 0));
+  if (fadeTransition) startTransition(strip.getTransition(), diff); // start transition prior to change
   opacity = o;
   stateChanged = true; // send UDP/WS broadcast
 }
 
 void Segment::setOption(uint8_t n, bool val) {
   bool prevOn = on;
-  if (fadeTransition && n == SEG_OPTION_ON && val != prevOn) startTransition(strip.getTransition()); // start transition prior to change
+  if (fadeTransition && n == SEG_OPTION_ON && val != prevOn) startTransition(strip.getTransition(), 255); // start transition prior to change
   if (val) options |=   0x01 << n;
   else     options &= ~(0x01 << n);
   if (!(n == SEG_OPTION_SELECTED || n == SEG_OPTION_RESET || n == SEG_OPTION_TRANSITIONAL)) stateChanged = true; // send UDP/WS broadcast
@@ -452,7 +455,7 @@ void Segment::setMode(uint8_t fx, bool loadDefaults) {
   // if we have a valid mode & is not reserved
   if (fx < strip.getModeCount() && strncmp_P("RSVD", strip.getModeData(fx), 4)) {
     if (fx != mode) {
-      startTransition(strip.getTransition()); // set effect transitions
+      startTransition(strip.getTransition(), 255); // set effect transitions
       //markForReset(); // transition will handle this
       mode = fx;
 
@@ -484,7 +487,7 @@ void Segment::setPalette(uint8_t pal) {
   if (pal < 245 && pal > GRADIENT_PALETTE_COUNT+13) pal = 0; // built in palettes
   if (pal > 245 && (strip.customPalettes.size() == 0 || 255U-pal > strip.customPalettes.size()-1)) pal = 0; // custom palettes
   if (pal != palette) {
-    if (strip.paletteFade) startTransition(strip.getTransition());
+    if (strip.paletteFade) startTransition(strip.getTransition(), 255);
     palette = pal;
     stateChanged = true; // send UDP/WS broadcast
   }
@@ -1240,7 +1243,7 @@ void WS2812FX::setMode(uint8_t segid, uint8_t m) {
   if (m >= getModeCount()) m = getModeCount() - 1;
 
   if (_segments[segid].mode != m) {
-    _segments[segid].startTransition(_transitionDur); // set effect transitions
+    _segments[segid].startTransition(_transitionDur, 255); // set effect transitions
     //_segments[segid].markForReset();
     _segments[segid].mode = m;
   }
@@ -1504,9 +1507,9 @@ void WS2812FX::setRange(uint16_t i, uint16_t i2, uint32_t col)
   }
 }
 
-void WS2812FX::setTransitionMode(bool t)
+void WS2812FX::setTransitionMode(bool t, uint8_t diff)
 {
-  for (segment &seg : _segments) if (!seg.transitional) seg.startTransition(t ? _transitionDur : 0);
+  for (segment &seg : _segments) if (!seg.transitional) seg.startTransition((t ? _transitionDur : 0), diff);
 }
 
 #ifdef WLED_DEBUG
